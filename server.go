@@ -11,10 +11,6 @@ import (
 var counter int
 var mutex = &sync.Mutex{}
 
-func echoString(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "hello")
-}
-
 func incrementCounter(w http.ResponseWriter, r *http.Request) {
 	mutex.Lock()
 	counter++
@@ -23,7 +19,10 @@ func incrementCounter(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/", echoString)
+
+	// handles the serve file, then point to directory, if you were to say
+	// http.Handle("/edit", http.FileServer(http.Dir("./static/edit")))
+	http.Handle("/", http.FileServer(http.Dir("./static")))
 
 	http.HandleFunc("/increment", incrementCounter)
 
