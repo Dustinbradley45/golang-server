@@ -1,34 +1,64 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
-	"sync"
 )
 
-var counter int
-var mutex = &sync.Mutex{}
+func homePage(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Welcome to the HomePage!")
+	fmt.Println("Endpoint Hit: homepage")
+}
 
-func incrementCounter(w http.ResponseWriter, r *http.Request) {
-	mutex.Lock()
-	counter++
-	fmt.Fprintf(w, strconv.Itoa(counter))
-	mutex.Unlock()
+type Article struct {
+	Title   string `json:"Title"`
+	Desc    string `json:"desc"`
+	Content string `json:"content"`
+}
+
+// let's declare a global Articles array
+// that we can then populate in our main function
+// to simulate a database
+var Articles []Article
+
+func returnAllArticles(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Endpoint Hit: returnAllArticles")
+	json.NewEncoder(w).Encode(Articles)
+}
+
+func handleRequests() {
+	http.HandleFunc("/", homePage)
+
+	// add our articles route and map it to our
+	//returnAllArticles function
+	http.HandleFunc("/articles", returnAllArticles)
+	log.Fatal(http.ListenAndServe(":8081", nil))
+
 }
 
 func main() {
+	Articles = []Article{
+		{Title: "Hello", Desc: "Article Description", Content: "Article Content"},
+		{Title: "Hello 2", Desc: "Article Description", Content: "Article Content"},
+	}
 
-	// handles the serve file, then point to directory, if you were to say
-	// http.Handle("/edit", http.FileServer(http.Dir("./static/edit")))
-	http.Handle("/", http.FileServer(http.Dir("./static")))
-
-	http.HandleFunc("/increment", incrementCounter)
-
-	http.HandleFunc("/hi", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hi")
-	})
-
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	handleRequests()
 }
+
+// EXAMPLE OF SERVING A STATIC FILE
+
+// package main
+
+// import (
+// 	"log"
+// 	"net/http"
+// )
+
+// func main() {
+
+// 	http.Handle("/", http.FileServer(http.Dir("./static")))
+
+// 	log.Fatal(http.ListenAndServe(":8081", nil))
+// }
